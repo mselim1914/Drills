@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Hajjan — Integrated QHSE Drill System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:        #003366;
+            --navy-dark:   #002244;
+            --navy-mid:    #00468b;
+            --navy-light:  #e8eef7;
+            --navy-mist:   #f0f4fa;
+            --gold:        #f0a500;
+            --border:      #c2cfe0;
+            --smoke:       #dde6f0;
+            --ghost:       #6b80a0;
+            --ink:         #0d1a2e;
+            --paper:       #f5f8fc;
+            --white:       #ffffff;
+            --safe:        #1a7c4a;
+            --danger:      #c0392b;
+            --radius:      6px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { font-family: 'Nunito Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; overflow-x: hidden; }
+
+        /* ── MASTHEAD ── */
+        .masthead { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%); color: white; position: relative; overflow: hidden; }
+        .masthead::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(-55deg, transparent, transparent 18px, rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 36px); pointer-events: none; }
+        .masthead-inner { position: relative; z-index: 1; display: flex; align-items: stretch; max-width: 1400px; margin: 0 auto; }
+        .masthead-stripe { width: 7px; background: var(--gold); flex-shrink: 0; }
+        .masthead-content { padding: 26px 36px; flex: 1; }
+        .masthead-eyebrow { font-family: 'Nunito', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+        .masthead h1 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 2.2rem; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.05; color: white; }
+        .masthead h1 span { color: var(--gold); }
+        .masthead-meta { margin-top: 10px; font-size: 0.75rem; color: rgba(255,255,255,0.45); font-family: 'Nunito', sans-serif; font-weight: 600; display: flex; gap: 20px; letter-spacing: 0.04em; }
+
+        /* ── TOP NAVIGATION (TABS) ── */
+        .top-nav { background: var(--navy-dark); padding: 0 36px; display: flex; align-items: center; height: 60px; border-bottom: 3px solid var(--gold); }
+        .nav-brand { color: white; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; margin-right: 40px; text-transform: uppercase; }
+        .nav-links { display: flex; gap: 5px; height: 100%; }
+        .nav-links button {
+            background: transparent; border: none; color: rgba(255,255,255,0.7); font-family: 'Nunito', sans-serif;
+            font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0 20px; display: flex; align-items: center; transition: all 0.2s; cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-links button:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-links button.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(255,255,255,0.05); }
+
+        /* ── VIEW MANAGER ── */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── SCHEDULER LAYOUT ── */
+        .layout-container { max-width: 1400px; margin: 30px auto; padding: 0 36px; display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        .card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .card-title { font-family: 'Nunito', sans-serif; color: var(--navy); font-weight: 800; font-size: 1.1rem; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid var(--smoke); padding-bottom: 10px; }
+        
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-nav-btn { background: var(--navy-mist); border: 1px solid var(--border); color: var(--navy); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .calendar-nav-btn:hover { background: var(--navy-light); }
+        .calendar-month-year { font-family: 'Nunito', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--navy); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+        .cal-day-header { background: var(--navy-dark); color: white; text-align: center; padding: 10px; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .cal-cell { min-height: 120px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px; background: white; position: relative; }
+        .cal-cell.empty { background: #fdfdfd; color: #ccc; }
+        .cal-cell.today { background: #fffcf0; }
+        .cal-cell.today .date-num { background: var(--gold); color: var(--navy-dark); }
+        .date-num { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; font-weight: 700; font-size: 0.85rem; color: var(--ghost); margin-bottom: 5px; }
+
+        .event-badge { background: var(--navy-light); border-left: 3px solid var(--navy); padding: 6px; border-radius: 3px; font-size: 0.75rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 4px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.1s; display: flex; flex-direction: column; gap: 2px;}
+        .event-badge:hover { transform: scale(1.02); background: var(--navy); color: white; }
+        .event-badge .evt-time { font-size: 0.65rem; opacity: 0.8; }
+        
+        /* Event Colors */
+        .type-h2s { border-color: #e74c3c; background: #fadbd8; }
+        .type-fire { border-color: #e67e22; background: #fdebd0; }
+        .type-medical { border-color: #27ae60; background: #d5f5e3; }
+        .type-spill { border-color: #8e44ad; background: #ebdef0; }
+
+        /* ── E-FORM LAYOUT ── */
+        .form-shell { max-width: 1120px; margin: 0 auto; padding: 36px 24px 80px; }
+        .status-bar { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid var(--border); border-left: 5px solid var(--gold); padding: 11px 18px; margin-bottom: 28px; font-family: 'Nunito', sans-serif; font-size: 0.78rem; font-weight: 600; border-radius: var(--radius); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 1.8s ease infinite; flex-shrink: 0; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.8); } }
+        .status-text { color: var(--ghost); } .status-clock { margin-left: auto; color: var(--ghost); font-size: 0.73rem; }
+
+        /* Form Progress */
+        .form-progress { display: flex; gap: 3px; margin-bottom: 30px; border-radius: 3px; overflow: hidden; }
+        .progress-step { flex: 1; height: 5px; background: var(--smoke); transition: background 0.3s; }
+        .progress-step.done { background: var(--safe); }
+        .progress-step.active { background: var(--gold); }
+
+        /* Form Sections */
+        .section { margin-bottom: 40px; }
+        .section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--smoke); }
+        .section-num { font-family: 'Nunito', sans-serif; font-size: 0.65rem; font-weight: 800; background: var(--navy); color: white; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; }
+        .section-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.05rem; text-transform: uppercase; color: var(--navy); }
+        .section-line { flex: 1; height: 1px; background: var(--smoke); }
+
+        /* Grids & Fields */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        
+        label { font-family: 'Nunito', sans-serif; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; color: var(--ghost); }
+        label.required::after { content: ' *'; color: var(--danger); }
+        
+        input[type="text"], input[type="date"], input[type="time"], select, textarea {
+            font-family: 'Nunito Sans', sans-serif; font-size: 0.93rem; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: var(--radius); background: white; color: var(--ink); outline: none; width: 100%; transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,51,102,0.1); }
+        input[readonly] { background: var(--navy-mist); color: var(--ghost); }
+        select:disabled { background: var(--smoke); color: var(--ghost); cursor: not-allowed; opacity: 0.7; }
+        textarea { resize: vertical; min-height: 90px; }
+
+        /* Utilities */
+        .other-expand { display: none; margin-top: 10px; padding: 14px; background: var(--navy-mist); border: 1.5px solid var(--border); border-left: 4px solid var(--gold); border-radius: var(--radius); }
+        .other-expand.open { display: block; }
+        
+        .btn-submit { background: var(--gold); color: var(--navy-dark); font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.05rem; text-transform: uppercase; padding: 12px 24px; border: none; border-radius: var(--radius); cursor: pointer; transition: 0.2s; width: 100%;}
+        .btn-submit:hover { background: #ffb920; transform: translateY(-1px); box-shadow: 0 4px 18px rgba(240,165,0,0.35); }
+        .btn-action { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.3); padding: 12px 24px; border-radius: var(--radius); cursor: pointer; font-weight: bold;}
+        .btn-action:hover { background: rgba(255,255,255,0.1); border-color: white; }
+
+        /* Tables & Dynamic Rows */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { font-family: 'Nunito', sans-serif; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--ghost); background: var(--navy-mist); padding: 10px; border-bottom: 1.5px solid var(--border); text-align: left; }
+        .data-table td { padding: 5px; border-bottom: 1px solid var(--smoke); }
+        .data-table td input, .data-table td select { border: 1.5px solid transparent; background: transparent; padding: 7px; }
+        .data-table td input:focus { border-color: var(--border); background: white; }
+        .btn-add-row { background: transparent; color: var(--navy); border: 1.5px dashed var(--border); width: 100%; padding: 10px; cursor: pointer; border-radius: var(--radius); font-weight: bold; margin-top: 5px; }
+        .btn-remove { background: #fdecea; color: var(--danger); border: 1px solid var(--danger); padding: 5px 10px; border-radius: var(--radius); cursor: pointer; }
+
+        /* Toasts & Modals */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: var(--safe); color: white; padding: 13px 22px; font-family: 'Nunito', sans-serif; font-weight: 700; border-radius: var(--radius); transform: translateY(90px); opacity: 0; transition: 0.3s; z-index: 999;}
+        .toast.show { transform: translateY(0); opacity: 1; }
+        
+        /* File Upload */
+        .file-drop-zone { border: 2px dashed var(--ghost); border-radius: var(--radius); background: var(--navy-mist); padding: 20px; text-align: center; cursor: pointer; margin-bottom: 15px; }
+        .file-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+        .file-preview-item { position: relative; aspect-ratio: 1; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+        .file-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-file { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; }
+
+        @media print { .top-nav, .btn-submit, .btn-action, .btn-add-row, .btn-remove, .file-drop-zone, .status-bar, .form-progress { display: none !important; } .form-shell { padding: 0; margin: 0;} body { background: white; } }
+    </style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+    <div class="masthead-inner">
+        <div class="masthead-stripe"></div>
+        <div class="masthead-content">
+            <div class="masthead-eyebrow">Hajjan Drilling Company · QHSE Module · Drill Management System</div>
+            <h1 id="masthead-title">Drill <span>Scheduler & Calendar</span></h1>
+        </div>
+    </div>
+</div>
+
+<!-- NAVIGATION TABS -->
+<nav class="top-nav">
+    <div class="nav-brand">Hajjan QHSE</div>
+    <div class="nav-links">
+        <button id="tab-scheduler" class="active" onclick="switchView('scheduler')">📅 Master Schedule</button>
+        <button id="tab-form" onclick="switchView('form')">📝 Execution E-Form</button>
+    </div>
+</nav>
+
+<!-- ========================================== -->
+<!-- VIEW 1: SCHEDULER & CALENDAR               -->
+<!-- ========================================== -->
+<div id="view-scheduler" class="view-section active layout-container">
+    
+    <!-- LEFT: SCHEDULE FORM -->
+    <aside class="card">
+        <div class="card-title">Schedule New Drill</div>
+        <form id="scheduleForm">
+            
+            <div class="form-group">
+                <label>Target Rig / Site</label>
+                <!-- Values match the E-Form perfectly -->
+                <select id="sch_rigSite" required>
+                    <option value="">— Select Location —</option>
+                    <option value="rig_01">Land Rig 01</option>
+                    <option value="rig_02">Land Rig 02</option>
+                    <option value="rig_03">Land Rig 03</option>
+                    <option value="rig_04">Land Rig 04</option>
+                    <option value="rig_05">Land Rig 05</option>
+                    <option value="rig_06">Land Rig 06</option>
+                    <option value="main_yard">Main Yard</option>
+                    <option value="rig_move">Rig Move Teams</option>
+                    <option value="catering">Catering & Support</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Drill Type</label>
+                <!-- Values match the E-Form perfectly -->
+                <select id="sch_drillType" required>
+                    <option value="">— Select Type —</option>
+                    <option value="pit">Pit Drill</option>
+                    <option value="trip">Trip Drill</option>
+                    <option value="h2s">H2S Drill</option>
+                    <option value="bop">BOP Drill</option>
+                    <option value="fire_pump">Fire Pump Drill</option>
+                    <option value="fire_fight">Fire Fighting Drill</option>
+                    <option value="confined">Confined Space Rescue</option>
+                    <option value="first_aid">First Aid Drill</option>
+                    <option value="medevac">Medical Evacuation</option>
+                    <option value="oil_spill">Oil Spill Drill</option>
+                    <option value="disaster">Disaster Drill</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="sch_drillDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>Planned Time</label>
+                <input type="time" id="sch_drillTime" required>
+            </div>
+
+            <div class="form-group">
+                <label>Recurrence / Repeat</label>
+                <select id="sch_drillRepeat">
+                    <option value="none">One-time</option>
+                    <option value="weekly">Weekly (4 weeks)</option>
+                    <option value="biweekly">Every 2 Weeks (2 occurences)</option>
+                    <option value="monthly">Monthly (Next month)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">+ Add to Schedule</button>
+        </form>
+    </aside>
+
+    <!-- RIGHT: CALENDAR -->
+    <main class="card">
+        <div class="calendar-header">
+            <button class="calendar-nav-btn" onclick="changeMonth(-1)">❮ Prev</button>
+            <div class="calendar-month-year" id="monthYearDisplay">Month Year</div>
+            <button class="calendar-nav-btn" onclick="changeMonth(1)">Next ❯</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Headers -->
+            <div class="cal-day-header">Sun</div><div class="cal-day-header">Mon</div><div class="cal-day-header">Tue</div>
+            <div class="cal-day-header">Wed</div><div class="cal-day-header">Thu</div><div class="cal-day-header">Fri</div><div class="cal-day-header">Sat</div>
+            <!-- Cells generated via JS -->
+        </div>
+    </main>
+
+</div>
+
+
+<!-- ========================================== -->
+<!-- VIEW 2: EXECUTION E-FORM                   -->
+<!-- ========================================== -->
+<div id="view-form" class="view-section form-shell">
+    
+    <div class="status-bar">
+        <div class="status-dot"></div>
+        <div class="status-text"><strong>Draft Mode</strong> — Record live data.</div>
+        <div class="status-clock" id="currentDateTime"></div>
+    </div>
+
+    <div class="form-progress">
+        <div class="progress-step done" id="ps1"></div><div class="progress-step" id="ps2"></div>
+        <div class="progress-step" id="ps3"></div><div class="progress-step" id="ps4"></div>
+        <div class="progress-step" id="ps5"></div><div class="progress-step" id="ps6"></div>
+    </div>
+
+    <form id="drillForm">
+
+        <!-- 01 GENERAL INFO -->
+        <div class="section">
+            <div class="section-head"><span class="section-num">01</span><span class="section-title">General Information</span><span class="section-line"></span></div>
+            <div class="grid-4" style="margin-bottom:18px;">
+                <div class="form-group"><label class="required">Drill ID</label><input type="text" id="drill_id" readonly></div>
+                <div class="form-group"><label class="required">Date</label><input type="date" id="drill_date" required></div>
+                <div class="form-group"><label class="required">Start Time</label><input type="time" id="drill_time_start" required></div>
+                <div class="form-group"><label>End Time</label><input type="time" id="drill_time_end"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="required">Rig / Site</label>
+                    <select id="rig_site" required onchange="handleRigChange(this)">
+                        <option value="">— Select Location —</option>
+                        <option value="rig_01">Land Rig 01</option>
+                        <option value="rig_02">Land Rig 02</option>
+                        <option value="rig_03">Land Rig 03</option>
+                        <option value="rig_04">Land Rig 04</option>
+                        <option value="rig_05">Land Rig 05</option>
+                        <option value="rig_06">Land Rig 06</option>
+                        <option value="main_yard">Main Yard</option>
+                        <option value="rig_move">Rig Move Teams</option>
+                        <option value="catering">Catering & Support</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Well Name / Location</label>
+                    <select id="well_location" disabled><option value="">— Select a Rig first —</option></select>
+                </div>
+                <div class="form-group"><label>Drill Title / Reference</label><input type="text" id="drill_title"></div>
+                <div class="form-group"><label>POB Count</label><input type="text" id="pob_count"></div>
+            </div>
+        </div>
+
+        <!-- 02 DRILL TYPE -->
+        <div class="section">
+            <div class="section-head"><span class="section-num">02</span><span class="section-title">Drill Type</span><span class="section-line"></span></div>
+            <div class="form-group">
+                <select id="drill_type" required>
+                    <option value="">— Select Type —</option>
+                    <option value="pit">Pit Drill</option>
+                    <option value="trip">Trip Drill</option>
+                    <option value="h2s">H2S Drill</option>
+                    <option value="bop">BOP Drill</option>
+                    <option value="fire_pump">Fire Pump Drill</option>
+                    <option value="fire_fight">Fire Fighting Drill</option>
+                    <option value="confined">Confined Space Rescue</option>
+                    <option value="first_aid">First Aid Drill</option>
+                    <option value="medevac">Medical Evacuation</option>
+                    <option value="oil_spill">Oil Spill Drill</option>
+                    <option value="disaster">Disaster Drill</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 03 SCENARIO -->
+        <div class="section">
+            <div class="section-head"><span class="section-num">03</span><span class="section-title">Drill Scenario</span><span class="section-line"></span></div>
+            <div class="form-group"><textarea id="scenario_desc" placeholder="Narrative of the emergency scenario..."></textarea></div>
+        </div>
+
+        <!-- 04 TIMELINE -->
+        <div class="section">
+            <div class="section-head"><span class="section-num">04</span><span class="section-title">KPI / Drill Timeline</span><span class="section-line"></span></div>
+            <table class="data-table">
+                <thead><tr><th style="width:15%">Time</th><th style="width:10%">Elapsed</th><th style="width:60%">Action / Observation</th><th style="width:15%">Del</th></tr></thead>
+                <tbody id="timeline_body"></tbody>
+            </table>
+            <button type="button" class="btn-add-row" onclick="addTimelineRow()">+ Add Timeline Step</button>
+        </div>
+
+        <!-- 05 CORRECTIVE ACTIONS -->
+        <div class="section">
+            <div class="section-head"><span class="section-num">05</span><span class="section-title">Analysis & Corrective Actions</span><span class="section-line"></span></div>
+            <table class="data-table">
+                <thead><tr><th style="width:40%">Observation / Gap</th><th style="width:40%">Corrective Action Required</th><th style="width:20%">Target Date</th></tr></thead>
+                <tbody id="actions_body"></tbody>
+            </table>
+            <button type="button" class="btn-add-row" onclick="addActionRow()">+ Add Corrective Action</button>
+
+            <!-- PHOTO UPLOAD -->
+            <div style="margin-top:20px;">
+                <label>Evidence & Photos</label>
+                <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">📷 Click to upload photos</div>
+                <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(event)">
+                <div class="file-preview-grid" id="filePreviewGrid"></div>
+            </div>
+        </div>
+
+        <!-- SUBMISSION -->
+        <div style="background:var(--navy-dark); padding:24px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-top:40px;">
+            <div style="color:rgba(255,255,255,0.7); font-size:0.8rem;">Submitting to QHSE Intelligence Platform locks this record.</div>
+            <div style="display:flex; gap:15px;">
+                <button type="button" class="btn-action" onclick="window.print()">🖨️ Print</button>
+                <button type="submit" class="btn-submit">Submit Report →</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="toast" id="toast">Message</div>
+
+<script>
+// ==========================================
+// 1. APP NAVIGATION & STATE
+// ==========================================
+function switchView(view) {
+    // Hide all
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-links button').forEach(el => el.classList.remove('active'));
+    
+    // Show selected
+    document.getElementById(`view-${view}`).classList.add('active');
+    document.getElementById(`tab-${view}`).classList.add('active');
+
+    // Update Masthead Title
+    if(view === 'scheduler') {
+        document.getElementById('masthead-title').innerHTML = 'Drill <span>Scheduler & Calendar</span>';
+        renderCalendar(); // refresh calendar
+    } else {
+        document.getElementById('masthead-title').innerHTML = 'Drill Execution <span>E-Form</span>';
+    }
+}
+
+function showToast(msg, isError=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = isError ? 'var(--danger)' : 'var(--safe)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Clock
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-GB') + ' · ' + now.toLocaleTimeString('en-GB');
+}, 1000);
+
+// ==========================================
+// 2. SCHEDULER & CALENDAR LOGIC
+// ==========================================
+let scheduledDrills = JSON.parse(localStorage.getItem('hajjan_drills_v2')) || [];
+let currentDate = new Date(); 
+const todayDate = new Date();
+
+// Formatting mappings to make badges look nice
+const rigDisplayNames = { 'rig_01':'Rig 01', 'rig_02':'Rig 02', 'rig_03':'Rig 03', 'rig_04':'Rig 04', 'rig_05':'Rig 05', 'rig_06':'Rig 06', 'main_yard':'Yard', 'rig_move':'Move', 'catering':'Catering' };
+const typeDisplayNames = { 'pit':'Pit', 'trip':'Trip', 'h2s':'H2S', 'bop':'BOP', 'fire_pump':'F.Pump', 'fire_fight':'Fire', 'confined':'Confined', 'first_aid':'1st Aid', 'medevac':'Medevac', 'oil_spill':'Spill', 'disaster':'Disaster' };
+
+document.getElementById('sch_drillDate').value = todayDate.toISOString().split('T')[0];
+
+document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const rig = document.getElementById('sch_rigSite').value;
+    const type = document.getElementById('sch_drillType').value;
+    const dateStr = document.getElementById('sch_drillDate').value;
+    const time = document.getElementById('sch_drillTime').value;
+    const repeat = document.getElementById('sch_drillRepeat').value;
+    
+    let baseDate = new Date(dateStr);
+    saveDrill(rig, type, dateStr, time);
+
+    if (repeat === 'weekly') {
+        for(let i=1; i<=3; i++) { let nd = new Date(baseDate); nd.setDate(baseDate.getDate() + (7*i)); saveDrill(rig, type, nd.toISOString().split('T')[0], time); }
+    } else if (repeat === 'biweekly') {
+        let nd = new Date(baseDate); nd.setDate(baseDate.getDate() + 14); saveDrill(rig, type, nd.toISOString().split('T')[0], time);
+    } else if (repeat === 'monthly') {
+        let nd = new Date(baseDate); nd.setMonth(baseDate.getMonth() + 1); saveDrill(rig, type, nd.toISOString().split('T')[0], time);
+    }
+
+    localStorage.setItem('hajjan_drills_v2', JSON.stringify(scheduledDrills));
+    currentDate = new Date(dateStr); 
+    renderCalendar();
+    this.reset();
+    document.getElementById('sch_drillDate').value = todayDate.toISOString().split('T')[0];
+    showToast("✓ Drill Scheduled!");
+});
+
+function saveDrill(rig, type, date, time) {
+    scheduledDrills.push({ id: Date.now()+Math.floor(Math.random()*1000), rig, type, date, time });
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const y = currentDate.getFullYear(), m = currentDate.getMonth();
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById('monthYearDisplay').textContent = `${monthNames[m]} ${y}`;
+    
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const prevMonthDays = new Date(y, m, 0).getDate();
+
+    const headers = grid.querySelectorAll('.cal-day-header');
+    grid.innerHTML = ''; headers.forEach(h => grid.appendChild(h));
+
+    for (let i = firstDay; i > 0; i--) { grid.innerHTML += `<div class="cal-cell empty"><span class="date-num">${prevMonthDays - i + 1}</span></div>`; }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const isToday = (i === todayDate.getDate() && m === todayDate.getMonth() && y === todayDate.getFullYear());
+        let cellHTML = `<div class="cal-cell ${isToday ? 'today' : ''}"><span class="date-num">${i}</span>`;
+        
+        const loopDate = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const dayDrills = scheduledDrills.filter(d => d.date === loopDate);
+
+        dayDrills.forEach(drill => {
+            let tClass = '';
+            if(['h2s'].includes(drill.type)) tClass = 'type-h2s';
+            if(['fire_fight', 'fire_pump'].includes(drill.type)) tClass = 'type-fire';
+            if(['medevac', 'first_aid'].includes(drill.type)) tClass = 'type-medical';
+            if(['oil_spill'].includes(drill.type)) tClass = 'type-spill';
+
+            const rigName = rigDisplayNames[drill.rig] || drill.rig;
+            const typeName = typeDisplayNames[drill.type] || drill.type;
+
+            // Notice the onclick handler here!
+            cellHTML += `<div class="event-badge ${tClass}" onclick="openDrillFromCalendar(${drill.id})" title="Click to Execute Drill">
+                            <span class="evt-time">🕒 ${drill.time} | ${rigName}</span>
+                            <span>${typeName}</span>
+                         </div>`;
+        });
+        cellHTML += `</div>`;
+        grid.innerHTML += cellHTML;
+    }
+}
+
+function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
+renderCalendar(); // Init
+
+// ==========================================
+// 3. E-FORM LOGIC & INTEGRATION
+// ==========================================
+function generateFormId() {
+    const now = new Date();
+    const fid = `HDC-${String(now.getFullYear()).slice(2)}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.floor(1000 + Math.random()*9000)}`;
+    document.getElementById('drill_id').value = fid;
+}
+generateFormId();
+
+// This is the bridge function!
+function openDrillFromCalendar(drillId) {
+    const drill = scheduledDrills.find(d => d.id === drillId);
+    if(!drill) return;
+
+    // 1. Switch Tabs
+    switchView('form');
+
+    // 2. Populate Form
+    document.getElementById('rig_site').value = drill.rig;
+    handleRigChange(document.getElementById('rig_site')); // Activate wells
+
+    document.getElementById('drill_type').value = drill.type;
+    document.getElementById('drill_date').value = drill.date;
+    document.getElementById('drill_time_start').value = drill.time;
+    
+    document.getElementById('drill_title').value = `Scheduled ${typeDisplayNames[drill.type]} Event`;
+
+    // 3. Update Progress Bar & Notify
+    updateFormProgress();
+    showToast(`✓ Loaded scheduled data for ${typeDisplayNames[drill.type]}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Rig to Well logic
+const wellsByRig = {
+    rig_01: ['Well R1-A', 'Well R1-B'], rig_02: ['Well R2-A', 'Well R2-B'],
+    rig_03: ['Well R3-A'], rig_04: ['Well R4-A', 'Well R4-C'],
+    rig_05: ['Well R5-A'], rig_06: ['Well R6-A'],
+    main_yard: [], rig_move: [], catering: []
+};
+
+function handleRigChange(sel) {
+    const wellSel = document.getElementById('well_location');
+    const wells = wellsByRig[sel.value] || [];
+    
+    if (wells.length === 0) {
+        wellSel.disabled = true;
+        wellSel.innerHTML = '<option value="na">N/A — Not applicable</option>';
+    } else {
+        wellSel.disabled = false;
+        wellSel.innerHTML = '<option value="">— Select Well —</option>' + wells.map(w => `<option value="${w}">${w}</option>`).join('');
+    }
+}
+
+// Dynamic Rows (Timeline)
+function addTimelineRow(time='', note='') {
+    const tbody = document.getElementById('timeline_body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="time" value="${time}" onchange="calcElapsed()"></td>
+        <td class="elapsed">—</td>
+        <td><input type="text" placeholder="Action..." value="${note}"></td>
+        <td><button type="button" class="btn-remove" onclick="this.closest('tr').remove(); calcElapsed();">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+    calcElapsed();
+}
+addTimelineRow('', 'Alarm raised'); addTimelineRow(); addTimelineRow();
+
+function calcElapsed() {
+    const rows = document.querySelectorAll('#timeline_body tr');
+    let startMins = null;
+    rows.forEach(r => {
+        const t = r.querySelector('input[type="time"]').value;
+        const eCell = r.querySelector('.elapsed');
+        if(!t) { eCell.textContent = '—'; return; }
+        const [h,m] = t.split(':').map(Number);
+        const mins = h * 60 + m;
+        if(startMins === null) { startMins = mins; eCell.textContent = '+00:00'; }
+        else {
+            const diff = mins - startMins;
+            eCell.textContent = `+${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
+        }
+    });
+}
+
+// Dynamic Rows (Actions)
+function addActionRow() {
+    const tbody = document.getElementById('actions_body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" placeholder="Gap..."></td>
+        <td><input type="text" placeholder="Action..."></td>
+        <td><input type="date"></td>
+    `;
+    tbody.appendChild(tr);
+}
+addActionRow(); addActionRow();
+
+// Progress Bar
+function updateFormProgress() {
+    const req = ['drill_date','drill_time_start','rig_site','drill_type'];
+    let filled = req.filter(f => document.getElementById(f).value !== '').length;
+    let pct = Math.round((filled / req.length) * 6);
+    for (let i=1; i<=6; i++) {
+        let s = document.getElementById(`ps${i}`);
+        s.className = (i < pct) ? 'progress-step done' : (i === pct) ? 'progress-step active' : 'progress-step';
+    }
+}
+document.getElementById('drillForm').addEventListener('input', updateFormProgress);
+
+// File Upload Logic
+let filesArr = [];
+function handleFileSelect(e) {
+    Array.from(e.target.files).forEach(f => {
+        if(!f.type.match('image.*')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            filesArr.push({ id: Date.now()+Math.random(), data: ev.target.result });
+            renderFiles();
+        };
+        reader.readAsDataURL(f);
+    });
+}
+function renderFiles() {
+    const g = document.getElementById('filePreviewGrid'); g.innerHTML = '';
+    filesArr.forEach(f => {
+        g.innerHTML += `<div class="file-preview-item"><img src="${f.data}"><button type="button" class="remove-file" onclick="removeFile('${f.id}')">✕</button></div>`;
+    });
+}
+function removeFile(id) { filesArr = filesArr.filter(f => f.id != id); renderFiles(); }
+
+// Submit Form
+document.getElementById('drillForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showToast('✓ Report Submitted to Platform!');
+    generateFormId(); // reset ID for next
+});
+</script>
+</body>
+</html>
